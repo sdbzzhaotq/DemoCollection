@@ -10,5 +10,9 @@ project(cv_read_save)
  
 find_package(OpenCV REQUIRED) 
 
-add_executable(run_me readAndSave.cpp)
-target_link_libraries(run_me opencv_core opencv_highgui opencv_imgproc opencv_imgcodecs)
+file(GLOB CURRENT_HEADERS  *.h)
+file(GLOB CURRENT_SOURCES  *.cpp)
+
+add_executable(${PROJECT_NAME} ${CURRENT_HEADERS} ${CURRENT_SOURCES})
+
+target_link_libraries(${PROJECT_NAME} opencv_core opencv_highgui opencv_imgproc opencv_imgcodecs)
