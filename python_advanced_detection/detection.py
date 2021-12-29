@@ -3,37 +3,6 @@ import numpy as np
 import cv2
 import glob
 
-objp = np.zeros((6*9,3), np.float32)
-objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
-objpoints = [] # 3d points in real world space
-imgpoints = [] # 2d points in image plane.
-
-# Make a list of calibration images
-image_cal = glob.glob('./camera_cal/calibration*.jpg')
-
-#Step through the list and search for chessboard corners
-for fname in image_cal:
-    img = cv2.imread(fname)
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
-    # Find the chessboard corners
-    ret, corners = cv2.findChessboardCorners(gray, (9,6),None)
-
-    # If found, add object points, image points
-    if ret == True:
-        objpoints.append(objp)
-        imgpoints.append(corners)
-
-        # Draw and display the corners
-        img = cv2.drawChessboardCorners(img, (9,6), corners, ret)
-
-
-img = cv2.imread('camera_cal/calibration5.jpg')
-img_size = (img.shape[1], img.shape[0])
-
-# Do camera calibration given object points and image points
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
-
 def rgb_select(img, r_thresh, g_thresh, b_thresh):
     r_channel = img[:,:,0]
     g_channel=img[:,:,1]
@@ -377,7 +346,7 @@ def overlay_text_on_image (image, avg_curverad, dist_from_center):
 def main_pipline(image_0):
     
     #1 畸变矫正
-    image_undistorted = cv2.undistort(image_0, mtx, dist, None, mtx)
+    # image_undistorted = cv2.undistort(image_0, mtx, dist, None, mtx)
 
     #2 颜色与梯度阈
     color_binary, combined_binary = color_gradient_threshold(image_0)
@@ -403,7 +372,7 @@ def main_pipline(image_0):
     pts = np.hstack((pts_left, pts_right))
     cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
     newwarp = cv2.warpPerspective(color_warp, Minv, (image_0.shape[1], image_0.shape[0])) 
-    result = cv2.addWeighted(image_undistorted, 1, newwarp, 0.3, 0)
+    result = cv2.addWeighted(image_0, 1, newwarp, 0.3, 0)
 
     #8 图像上显示文字
     result = overlay_text_on_image (result, avg_curverad, dist_from_center)
@@ -412,6 +381,7 @@ def main_pipline(image_0):
 def process_image(image):
     result = main_pipline(image)
     return result
+
 
 cap = cv2.VideoCapture('project_video.mp4')
 
