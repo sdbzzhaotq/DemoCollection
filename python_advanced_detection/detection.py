@@ -1,12 +1,11 @@
 # import packages
 import numpy as np
 import cv2
-import glob
 
 def rgb_select(img, r_thresh, g_thresh, b_thresh):
-    r_channel = img[:,:,0]
-    g_channel=img[:,:,1]
-    b_channel = img[:,:,2]
+    b_channel = img[:,:,0]
+    g_channel = img[:,:,1]
+    r_channel = img[:,:,2]
     r_binary = np.zeros_like(r_channel)
     r_binary[(r_channel > r_thresh[0]) & (r_channel <= r_thresh[1])] = 1
 
@@ -25,7 +24,7 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
     # Calculate directional gradient
 
     # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Apply x or y gradient with the OpenCV Sobel() function
     # and take the absolute value
     if orient == 'x':
@@ -45,10 +44,10 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
 
 
 def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
-    luv= cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-    hsv = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
-    lab=cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+    luv= cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
+    hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
+    hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+    lab=cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     s_channel = hsv[:,:,1]
     b_channel=lab[:,:,2]
     l_channel = luv[:,:,0]
@@ -74,10 +73,10 @@ def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
 
 def color_gradient_threshold(image_undistorted):
     ksize = 15
-    luv= cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2LUV)
-    hls = cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2HLS)
-    hsv = cv2.cvtColor(image_undistorted,cv2.COLOR_RGB2HSV)
-    lab=cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2LAB)
+    luv= cv2.cvtColor(image_undistorted, cv2.COLOR_BGR2LUV)
+    hls = cv2.cvtColor(image_undistorted, cv2.COLOR_BGR2HLS)
+    hsv = cv2.cvtColor(image_undistorted,cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(image_undistorted, cv2.COLOR_BGR2LAB)
     s_channel = hsv[:,:,1]
 
     gradx = abs_sobel_thresh(image_undistorted,orient='x',sobel_kernel=ksize,thresh=(50,90))
@@ -88,6 +87,7 @@ def color_gradient_threshold(image_undistorted):
 
     combined_binary[((gradx == 1) & (grady == 1) | (c_binary == 1) | (rgb_binary==1))] = 255
     color_binary = combined_binary
+
     return color_binary, combined_binary
 
 
@@ -344,12 +344,8 @@ def overlay_text_on_image (image, avg_curverad, dist_from_center):
 
 
 def main_pipline(image_0):
-    
-    #1 畸变矫正
-    # image_undistorted = cv2.undistort(image_0, mtx, dist, None, mtx)
-
     #2 颜色与梯度阈
-    color_binary, combined_binary = color_gradient_threshold(image_0)
+    _, combined_binary = color_gradient_threshold(image_0)
 
     #3 感兴趣区域
     masked = apply_region_of_interest_mask(combined_binary)
@@ -392,9 +388,7 @@ while(cap.isOpened()):
   ret, frame = cap.read()
   if ret == True:
     # Display the resulting frame
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     ret_frame = process_image(frame)
-    ret_frame = cv2.cvtColor(ret_frame, cv2.COLOR_RGB2BGR)
     cv2.imshow('Frame',ret_frame)
 
     # Press Q on keyboard to  exit
@@ -405,4 +399,5 @@ while(cap.isOpened()):
     break
 
 cap.release()
+
 cv2.destroyAllWindows()
