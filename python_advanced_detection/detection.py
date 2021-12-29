@@ -1,27 +1,12 @@
 # import packages
-import matplotlib.pyplot as plt
-import matplotlib.image as mping
 import numpy as np
 import cv2
 import glob
-# import pickle
-import os
-
-# from moviepy.editor import VideoFileClip
-# from IPython.display import HTML
-
-
-image = mping.imread('./test_images/test1.jpg')#RGB格式
-# plt.imshow(image)
-# plt.show()
 
 objp = np.zeros((6*9,3), np.float32)
 objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
-
-# Arrays to store object points and image points from all the images.
 objpoints = [] # 3d points in real world space
 imgpoints = [] # 2d points in image plane.
-
 
 # Make a list of calibration images
 image_cal = glob.glob('./camera_cal/calibration*.jpg')
@@ -42,31 +27,12 @@ for fname in image_cal:
         # Draw and display the corners
         img = cv2.drawChessboardCorners(img, (9,6), corners, ret)
 
-# cv2.destroyAllWindows() #销毁我们创建的所有窗口
-
 
 img = cv2.imread('camera_cal/calibration5.jpg')
 img_size = (img.shape[1], img.shape[0])
 
 # Do camera calibration given object points and image points
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size,None,None)
-image_undistorted = cv2.undistort(image, mtx, dist, None, mtx)
-#cv2.imshow('undistorted image',image_undistorted)
-# plt.imshow(image_undistorted)
-# plt.show()
-
-# 画图
-def plot2images(image1, image2, title1, title2, image1cmap=None, image2cmap='gray', save_filename=None):
-    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
-    f.tight_layout()
-    ax1.imshow(image1, cmap=image1cmap)
-    ax1.set_title(title1, fontsize= 30)
-    ax2.imshow(image2, cmap=image2cmap)
-    ax2.set_title(title2, fontsize= 30)
-    plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
-    if save_filename:
-        plt.savefig(save_filename)
-    plt.show()
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
 
 def rgb_select(img, r_thresh, g_thresh, b_thresh):
     r_channel = img[:,:,0]
@@ -85,16 +51,6 @@ def rgb_select(img, r_thresh, g_thresh, b_thresh):
     combined[((r_binary == 1) & (g_binary == 1) & (b_binary == 1))] = 1
     return combined
 
-
-luv = cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2LUV)
-hls = cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2HLS)
-hsv = cv2.cvtColor(image_undistorted,cv2.COLOR_RGB2HSV)
-lab =cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2LAB)
-s_channel = hsv[:,:,1]
-b_channel=lab[:,:,2]
-l_channel = luv[:,:,0]
-v_channel= hsv[:,:,2]
-# # print(s_channel.shape)
 
 def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
     # Calculate directional gradient
@@ -116,9 +72,6 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
     # Here I'm using inclusive (>=, <=) thresholds, but exclusive is ok too
     grad_binary[(scaled_sobel >= thresh[0]) & (scaled_sobel <= thresh[1])] = 1
 
-    #plot2images(image1=image, image2=grad_binary, title1='Original Image', title2='thresholded y-derivative', save_filename='output_images/thresholdedy-derivative.png')
-
-    # Return the result
     return grad_binary
 
 
@@ -156,7 +109,7 @@ def color_gradient_threshold(image_undistorted):
     hls = cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2HLS)
     hsv = cv2.cvtColor(image_undistorted,cv2.COLOR_RGB2HSV)
     lab=cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2LAB)
-
+    s_channel = hsv[:,:,1]
 
     gradx = abs_sobel_thresh(image_undistorted,orient='x',sobel_kernel=ksize,thresh=(50,90))
     grady = abs_sobel_thresh(image_undistorted,orient='y',sobel_kernel=ksize,thresh=(30,90))
@@ -168,8 +121,6 @@ def color_gradient_threshold(image_undistorted):
     color_binary = combined_binary
     return color_binary, combined_binary
 
-color_binary, combined_binary = color_gradient_threshold(image_undistorted )
-# plot2images(image1 =image , image2 = combined_binary, title1='Original Image', title2='color_gradient_threshold Image')
 
 # 透视变换
 def perspective_transform(image_undistorted, combined_binary):
@@ -182,22 +133,16 @@ def perspective_transform(image_undistorted, combined_binary):
     top_right_dst = [1100,0]
     bottom_right_dst = [1100,720]
     bottom_left_dst = [200,720]
-#     gray = cv2.cvtColor(image_undistorted, cv2.COLOR_RGB2GRAY)
     img_size = (image_undistorted.shape[1], image_undistorted.shape[0])
     src = np.float32([top_left,top_right, bottom_right, bottom_left] )
     dst = np.float32([top_left_dst, top_right_dst, bottom_right_dst, bottom_left_dst])
     M = cv2.getPerspectiveTransform(src, dst)
     Minv = cv2.getPerspectiveTransform(dst, src)
-    # warped =  warped = cv2.warpPerspective(image_undistorted, M, img_size)
+
     warped  = cv2.warpPerspective(combined_binary, M, img_size)
     return warped, Minv
 	
-warped, Minv = perspective_transform(image_undistorted, combined_binary)
-# plot2images(image1 = image, image2 = warped, title1='Original Image', title2='perspective_Imag')
 
-# histogram = np.sum(warped[:,:], axis=0)
-# plt.plot(histogram)
-# plt.show()
 def finding_line(warped):
     # 将warped中从360行开始加到720行；
     histogram2 = np.sum(warped[warped.shape[0]//2:,:], axis=0)
@@ -255,35 +200,21 @@ def finding_line(warped):
     ploty = np.linspace(0, warped.shape[0]-1, warped.shape[0] )
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
-#     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
     
     
-        # 找出左车道线附近的像素点序号；
+    # 找出左车道线附近的像素点序号；
     left_lane_inds = ((nonzerox > (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + 
     left_fit[2] - margin)) & (nonzerox < (left_fit[0]*(nonzeroy**2) + 
     left_fit[1]*nonzeroy + left_fit[2] + margin))) 
-         # 找出右车道线附近的像素点序号；
+    # 找出右车道线附近的像素点序号；
     right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + 
     right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) + 
     right_fit[1]*nonzeroy + right_fit[2] + margin)))  
-    # print(left_lane_inds)
-    # print(right_lane_inds)
 
     return left_fitx, right_fitx, out_img, left_fit, right_fit, left_lane_inds, right_lane_inds
 
 
-
-left_fitx, right_fitx, out_img, left_fit, right_fit, left_lane_inds, right_lane_inds = finding_line(warped)
-ploty = np.linspace(0, warped.shape[0]-1, warped.shape[0] )
-# plt.imshow(out_img)
-# plt.plot(left_fitx, ploty, color='yellow')
-# plt.plot(right_fitx, ploty, color='yellow')
-# plt.show()
-
-
-
-# binary_warped = warped
 def sliding_window(binary_warped,left_fit,right_fit):
     nonzero = binary_warped.nonzero()
     nonzeroy = np.array(nonzero[0])
@@ -332,14 +263,6 @@ def sliding_window(binary_warped,left_fit,right_fit):
    
     return left_fitx, right_fitx, left_line_pts,right_line_pts,window_img, out_img,left_lane_inds,right_lane_inds
 
-# # Draw the lane onto the warped blank image
-# left_fitx, right_fitx, left_line_pts,right_line_pts,window_img, out_img, left_lane_inds, right_lane_inds = sliding_window(binary_warped,left_fit,right_fit)
-# cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
-# cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
-# result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
-# plt.imshow(result)
-# plt.show()
-
 
 def CalculateCurvature(binary_image, left_fit, right_fit, l_lane_inds, r_lane_inds):
 
@@ -347,25 +270,11 @@ def CalculateCurvature(binary_image, left_fit, right_fit, l_lane_inds, r_lane_in
     # I'll choose the maximum y-value, corresponding to the bottom of the image
     img_size = (binary_image.shape[1], binary_image.shape[0])
    
-    #h = binary_image.shape[0]
     ploty = np.linspace(0, img_size[1]-1, img_size[1])
     y_eval = np.max(ploty)
-#     left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
-#     right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
-    #print(left_curverad, right_curverad)
-    # Example values: 1926.74 1908.48
     
-    # Define conversions in x and y from pixels space to meters
-    ###RESUBMIT
-    # 70ft  dashed space + dashed line + dashed space
     ym_per_pix = 30/720  
-#     ym_per_pix = 21.34/385 # meters per pixel in y dimension 
-    # 12ft lane in 500 pixels 
     xm_per_pix = 3.7/960     # meters per pixel in y dimension 
-    ### ym_per_pix = 30/720 # # meters per pixel in y dimension 
-    ### xm_per_pix = 3.7/700 # meters per pixel in x dimension
-    ###RESUBMIT - END
-    
     
     # 找到图像中不为零的所有像素点的像素坐标
     nonzero = binary_image.nonzero()
@@ -387,7 +296,7 @@ def CalculateCurvature(binary_image, left_fit, right_fit, l_lane_inds, r_lane_in
     # 左右车道线曲率平均
     avg_curverad = (left_curverad + right_curverad) / 2
     
-## 以下计算本车在车道线中心的位置
+    ## 以下计算本车在车道线中心的位置
 
     dist_from_center = 0.0
     # assume the camera is centered in the vehicle
@@ -398,27 +307,20 @@ def CalculateCurvature(binary_image, left_fit, right_fit, l_lane_inds, r_lane_in
             camera_pos = img_size[0] / 2
             ###RESUBMIT - END
             
-            # find where the right and left lanes intersect the bottom of the frame
-#             left_lane_pix = np.polyval(left_fit, img_size[1])
-#             right_lane_pix = np.polyval(right_fit, img_size[1])
-        # 左右车道线最底端x坐标
+            # 左右车道线最底端x坐标
             left_lane_pix = np.polyval(left_fit, binary_image.shape[0])
             right_lane_pix = np.polyval(right_fit, binary_image.shape[0])
-        # 左右车道线中点x坐标
+            # 左右车道线中点x坐标
             center_of_lane_pix = (left_lane_pix + right_lane_pix) / 2
-        # 摄像头（本车中心）与车道线中心的距离
+            # 摄像头（本车中心）与车道线中心的距离
             dist_from_center = (camera_pos - center_of_lane_pix) * 3.7/960
-            #print(dist_from_center, 'm')
 
     return  avg_curverad, dist_from_center
-# CalculateCurvature(binary_image, left_fit, right_fit, l_lane_inds, r_lane_inds)
-# avg_curverad, dist_from_center = CalculateCurvature(binary_warped,left_fit, right_fit, left_lane_inds, right_lane_inds)
 
 
 def region_of_interest(img, vertices):
     """
     Applies an image mask.
-    
     Only keeps the region of the image defined by the polygon
     formed from `vertices`. The rest of the image is set to black.
     """
@@ -453,9 +355,7 @@ def apply_region_of_interest_mask(image):
 
 
 def overlay_text_on_image (image, avg_curverad, dist_from_center):
-    
     new_img = np.copy(image)
-    #h = new_img.shape[0]
     
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_color = (255,255,255)
@@ -473,10 +373,6 @@ def overlay_text_on_image (image, avg_curverad, dist_from_center):
     
     return new_img
 
-# new_img = overlay_text_on_image (image, avg_curverad, dist_from_center)
-# plt.imshow(new_img)
-# plt.show()
-
 
 def main_pipline(image_0):
     
@@ -484,7 +380,7 @@ def main_pipline(image_0):
     image_undistorted = cv2.undistort(image_0, mtx, dist, None, mtx)
 
     #2 颜色与梯度阈
-    color_binary, combined_binary = color_gradient_threshold(image_undistorted)
+    color_binary, combined_binary = color_gradient_threshold(image_0)
 
     #3 感兴趣区域
     masked = apply_region_of_interest_mask(combined_binary)
@@ -499,7 +395,7 @@ def main_pipline(image_0):
     avg_curverad, dist_from_center = CalculateCurvature(warped_0,left_fit, right_fit, left_lane_inds, right_lane_inds)
     
     #7 在图像上画车道线
-    
+    ploty = np.linspace(0, warped_0.shape[0]-1, warped_0.shape[0])
     warp_zero = np.zeros_like(warped_0).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
     pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
@@ -509,53 +405,22 @@ def main_pipline(image_0):
     newwarp = cv2.warpPerspective(color_warp, Minv, (image_0.shape[1], image_0.shape[0])) 
     result = cv2.addWeighted(image_undistorted, 1, newwarp, 0.3, 0)
 
-   #8 图像上显示文字
+    #8 图像上显示文字
     result = overlay_text_on_image (result, avg_curverad, dist_from_center)
     return result
 
-
-# image = mping.imread('./test_images/test2.jpg')
-# result = main_pipline(image)
-# plt.imshow(result)
-# plt.show()
-
-
-def read_all_images2():
-    input = "test_images/"
-    output = "output_images/"
-    all_files = os.listdir(input)
-    for file_name in all_files:
-        images = mping.imread(input+file_name)
-        result2 = main_pipline(images)
-        plt.figure()
-        plt.imshow(result2)
-        plt.show()
-        cv2.imwrite(output + file_name, result2)
-
-
-# read_all_images2()
-
 def process_image(image):
-    # NOTE: The output you return should be a color image (3 channel) for processing video below
-    # TODO: put your pipeline here,
-    # you should return the final output (image where lines are drawn on lanes)
     result = main_pipline(image)
-
     return result
 
-# cap = cv2.VideoCapture('project_video.mp4')
 cap = cv2.VideoCapture('project_video.mp4')
 
-# Check if camera opened successfully
 if (cap.isOpened()== False): 
   print("Error opening video stream or file")
 
-# Read until video is completed
 while(cap.isOpened()):
-  # Capture frame-by-frame
   ret, frame = cap.read()
   if ret == True:
-
     # Display the resulting frame
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     ret_frame = process_image(frame)
@@ -565,13 +430,9 @@ while(cap.isOpened()):
     # Press Q on keyboard to  exit
     if cv2.waitKey(25) & 0xFF == ord('q'):
       break
-
   # Break the loop
   else: 
     break
 
-# When everything done, release the video capture object
 cap.release()
-
-# Closes all the frames
 cv2.destroyAllWindows()
