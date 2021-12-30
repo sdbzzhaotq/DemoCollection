@@ -20,7 +20,7 @@ def rgb_select(img, r_thresh, g_thresh, b_thresh):
     return combined
 
 
-def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
+def abs_sobel_thresh(image, orient='x', sobel_kernel = 3, thresh = (0, 255)):
     # Calculate directional gradient
 
     # Convert to grayscale
@@ -33,7 +33,7 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
         abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel))
 
     # Rescale back to 8 bit integer
-    scaled_sobel = np.uint8(255*abs_sobel/np.max(abs_sobel))
+    scaled_sobel = np.uint8(255 * abs_sobel / np.max(abs_sobel))
 
     # Create a copy and apply the threshold
     grad_binary = np.zeros_like(scaled_sobel)
@@ -44,10 +44,10 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel=3, thresh=(0, 255)):
 
 
 def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
-    luv= cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
+    luv = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
     hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
-    hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
-    lab=cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     s_channel = hsv[:,:,1]
     b_channel=lab[:,:,2]
     l_channel = luv[:,:,0]
@@ -71,21 +71,21 @@ def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
     return combined
 
 
-def color_gradient_threshold(image_undistorted):
+def color_gradient_threshold(image):
     ksize = 15
-    luv= cv2.cvtColor(image_undistorted, cv2.COLOR_BGR2LUV)
-    hls = cv2.cvtColor(image_undistorted, cv2.COLOR_BGR2HLS)
-    hsv = cv2.cvtColor(image_undistorted,cv2.COLOR_BGR2HSV)
-    lab = cv2.cvtColor(image_undistorted, cv2.COLOR_BGR2LAB)
+    luv = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
+    hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     s_channel = hsv[:,:,1]
 
-    gradx = abs_sobel_thresh(image_undistorted,orient='x',sobel_kernel=ksize,thresh=(50,90))
-    grady = abs_sobel_thresh(image_undistorted,orient='y',sobel_kernel=ksize,thresh=(30,90))
-    c_binary = color_thresh(image_undistorted,s_thresh=(70,100),l_thresh=(60,255),b_thresh=(50,255),v_thresh=(150,255))
-    rgb_binary = rgb_select(image_undistorted,r_thresh=(225,255),g_thresh=(225,255),b_thresh=(0,255))
+    gradx = abs_sobel_thresh(image, orient = 'x', sobel_kernel = ksize, thresh = (50,90))
+    grady = abs_sobel_thresh(image, orient = 'y', sobel_kernel = ksize, thresh = (30,90))
+    c_binary = color_thresh(image, s_thresh = (70,100), l_thresh = (60, 255), b_thresh = (50, 255), v_thresh = (150,255))
+    rgb_binary = rgb_select(image, r_thresh = (225,255), g_thresh = (225,255), b_thresh = (0,255))
     combined_binary = np.zeros_like(s_channel)
 
-    combined_binary[((gradx == 1) & (grady == 1) | (c_binary == 1) | (rgb_binary==1))] = 255
+    combined_binary[((gradx == 1) & (grady == 1) | (c_binary == 1) | (rgb_binary == 1))] = 255
     color_binary = combined_binary
 
     return color_binary, combined_binary
@@ -108,7 +108,7 @@ def perspective_transform(image_undistorted, combined_binary):
     M = cv2.getPerspectiveTransform(src, dst)
     Minv = cv2.getPerspectiveTransform(dst, src)
 
-    warped  = cv2.warpPerspective(combined_binary, M, img_size)
+    warped = cv2.warpPerspective(combined_binary, M, img_size)
     return warped, Minv
 	
 
@@ -140,14 +140,10 @@ def finding_line(warped):
         win_xleft_high = leftx_current+margin
         win_xright_low = rightx_current - margin
         win_xright_high = rightx_current + margin
-        cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),
-        (0,255,0), 2) 
-        cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),
-        (0,255,0), 2) 
-        good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & 
-        (nonzerox >= win_xleft_low) &  (nonzerox < win_xleft_high)).nonzero()[0]
-        good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & 
-        (nonzerox >= win_xright_low) &  (nonzerox < win_xright_high)).nonzero()[0]
+        cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high), (0,255,0), 2) 
+        cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high), (0,255,0), 2) 
+        good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) &  (nonzerox < win_xleft_high)).nonzero()[0]
+        good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) &  (nonzerox < win_xright_high)).nonzero()[0]
         left_lane_inds.append(good_left_inds)
         right_lane_inds.append(good_right_inds)
         
