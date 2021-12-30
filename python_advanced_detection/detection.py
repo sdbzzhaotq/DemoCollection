@@ -25,13 +25,16 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel = 3, thresh = (0, 255)):
 
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # print("gray shap %dx%d" %(gray.shape[0],gray.shape[1]))
     # Apply x or y gradient with the OpenCV Sobel() function
     # and take the absolute value
     if orient == 'x':
-        abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel))
+        abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize = sobel_kernel))
+        # print(abs_sobel.shape)
     if orient == 'y':
-        abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel))
-
+        abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize = sobel_kernel))
+        # print(abs_sobel.shape)
+    print(abs_sobel)
     # Rescale back to 8 bit integer
     scaled_sobel = np.uint8(255 * abs_sobel / np.max(abs_sobel))
 
@@ -48,10 +51,11 @@ def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
     hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+
     s_channel = hsv[:,:,1]
-    b_channel=lab[:,:,2]
+    b_channel = lab[:,:,2]
     l_channel = luv[:,:,0]
-    v_channel= hsv[:,:,2]
+    v_channel = hsv[:,:,2]
 
     s_binary = np.zeros_like(s_channel)
     s_binary[(s_channel > s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
@@ -73,10 +77,7 @@ def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
 
 def color_gradient_threshold(image):
     ksize = 15
-    luv = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
-    hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     s_channel = hsv[:,:,1]
 
     gradx = abs_sobel_thresh(image, orient = 'x', sobel_kernel = ksize, thresh = (50,90))

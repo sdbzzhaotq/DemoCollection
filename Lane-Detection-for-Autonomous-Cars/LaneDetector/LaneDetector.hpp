@@ -1,26 +1,3 @@
-/** MIT License
-Copyright (c) 2017 Miguel Maestre Trueba
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *@copyright Copyright 2017 Miguel Maestre Trueba
- *@file LaneDetector.hpp
- *@author Miguel Maestre Trueba
- *@brief Header file for the LaneDetector class. Functions are developed in LaneDetector.cpp
- */
-
 #pragma once
 #include <opencv2/highgui/highgui.hpp>
 #include<iostream>
@@ -28,12 +5,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include "opencv2/opencv.hpp"
 
-/**
- *@brief Definition of the LaneDetector class. It contains all the functions and variables depicted in the
- *@brief Activity diagram and UML Class diagram.
- *@brief It detects the lanes in an image if a highway and outputs the
- *@brief same image with the plotted lane.
- */
 class LaneDetector {
  private:
   double img_size;
@@ -54,4 +25,8 @@ class LaneDetector {
   std::vector<cv::Point> regression(std::vector<std::vector<cv::Vec4i> > left_right_lines, cv::Mat inputImage);  // Get only one line for each side of the lane
   std::string predictTurn();  // Determine if the lane is turning or not by calculating the position of the vanishing point
   int plotLane(cv::Mat inputImage, std::vector<cv::Point> lane, std::string turn);  // Plot the resultant lane and turn prediction in the frame.
+
+  void AbsSobelThresh(const cv::Mat image, const bool orient = false, const int soble_kernel = 3, const std::vector<int> threash = {0 , 255});
+
+  void ColorGradientThreshold(cv::Mat image);
 };

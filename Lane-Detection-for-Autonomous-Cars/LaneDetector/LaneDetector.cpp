@@ -301,3 +301,54 @@ int LaneDetector::plotLane(cv::Mat inputImage, std::vector<cv::Point> lane, std:
   cv::imshow("Lane", inputImage);
   return 0;
 }
+
+//orient = true means x false means y
+void LaneDetector::AbsSobelThresh(const cv::Mat image, const bool orient, const int soble_kernel, const std::vector<int> threash) {
+  cv::Mat gray;
+  cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+  cv::Mat sobel;
+  if(orient) {
+    //x
+    cv::Sobel(gray, sobel, CV_64F, 1, 0, soble_kernel);
+  } else {
+    //y
+    cv::Sobel(gray, sobel, CV_64F, 0, 1, soble_kernel);
+  }
+
+  cv::normalize(sobel,sobel,1.0,0.0,cv::NORM_INF);
+  cv::convertScaleAbs(sobel*255,sobel);
+
+
+  std::cout<< sobel <<std::endl;
+
+#if 0
+  cv::Mat abs_sobel = abs(sobel);
+  double minVal, maxVal;
+  cv::Point minLoc, maxLoc;
+  minMaxLoc( abs_sobel, &minVal, &maxVal, &minLoc, &maxLoc );
+  cv::Mat scaled_sobel(abs_sobel.rows,abs_sobel.cols,CV_8U);
+  scaled_sobel = (255*abs_sobel) / maxVal;
+  // cv::convertScaleAbs()
+  // scaled_sobel.assignTo(scaled_sobel,CV_8U);
+  scaled_sobel.convertTo(scaled_sobel,CV_8U);
+#endif
+  // cv::Mat grad_binary = cv::Mat::zeros(scaled_sobel.size(),scaled_sobel.type());
+
+  // std::cout<< scaled_sobel <<std::endl;
+}
+
+
+
+void LaneDetector::ColorGradientThreshold(cv::Mat image){
+  const int ksize = 15;
+  cv::Mat hsv;
+  cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
+  cv::imshow("hsv", hsv);
+  cv::Mat channel[3];
+  cv::split(hsv,channel);
+
+  AbsSobelThresh(image, false, ksize, {50 , 90});
+
+  //auto test = channel[1];
+  cv::Mat combined_binary = cv::Mat::zeros(channel[1].size(), channel[1].type());
+}
