@@ -25,16 +25,14 @@ def abs_sobel_thresh(image, orient='x', sobel_kernel = 3, thresh = (0, 255)):
 
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # print("gray shap %dx%d" %(gray.shape[0],gray.shape[1]))
+
     # Apply x or y gradient with the OpenCV Sobel() function
     # and take the absolute value
     if orient == 'x':
         abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize = sobel_kernel))
-        # print(abs_sobel.shape)
     if orient == 'y':
         abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize = sobel_kernel))
-        # print(abs_sobel.shape)
-    print(abs_sobel)
+
     # Rescale back to 8 bit integer
     scaled_sobel = np.uint8(255 * abs_sobel / np.max(abs_sobel))
 
@@ -376,25 +374,33 @@ def process_image(image):
     return result
 
 
-cap = cv2.VideoCapture('project_video.mp4')
-
-if (cap.isOpened()== False): 
-  print("Error opening video stream or file")
-
-while(cap.isOpened()):
-  ret, frame = cap.read()
-  if ret == True:
-    # Display the resulting frame
+def image_case():
+    frame = cv2.imread("test_images/test1.jpg")
     ret_frame = process_image(frame)
     cv2.imshow('Frame',ret_frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    # Press Q on keyboard to  exit
-    if cv2.waitKey(25) & 0xFF == ord('q'):
-      break
-  # Break the loop
-  else: 
-    break
+def video_case():
+    cap = cv2.VideoCapture('project_video.mp4')
 
-cap.release()
+    if (cap.isOpened()== False): 
+        print("Error opening video stream or file")
 
-cv2.destroyAllWindows()
+    while(cap.isOpened()):
+        ret, frame = cap.read()
+        if ret == True:
+            # Display the resulting frame
+            ret_frame = process_image(frame)
+            cv2.imshow('Frame',ret_frame)
+
+            # Press Q on keyboard to  exit
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+        # Break the loop
+        else: 
+            break
+
+    cap.release()
+
+image_case()
