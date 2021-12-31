@@ -10,10 +10,10 @@ def rgb_select(img, r_thresh, g_thresh, b_thresh):
     r_binary[(r_channel > r_thresh[0]) & (r_channel <= r_thresh[1])] = 1
 
     g_binary = np.zeros_like(g_channel)
-    g_binary[(r_channel > g_thresh[0]) & (r_channel <= g_thresh[1])] = 1
+    g_binary[(g_channel > g_thresh[0]) & (g_channel <= g_thresh[1])] = 1
 
     b_binary = np.zeros_like(b_channel)
-    b_binary[(r_channel > b_thresh[0]) & (r_channel <= b_thresh[1])] = 1
+    b_binary[(b_channel > b_thresh[0]) & (b_channel <= b_thresh[1])] = 1
 
     combined = np.zeros_like(r_channel)
     combined[((r_binary == 1) & (g_binary == 1) & (b_binary == 1))] = 1
@@ -59,13 +59,13 @@ def color_thresh(image, s_thresh, l_thresh, b_thresh, v_thresh):
     s_binary[(s_channel > s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
 
     b_binary = np.zeros_like(b_channel)
-    b_binary[(s_channel > b_thresh[0]) & (s_channel <= b_thresh[1])] = 1
+    b_binary[(b_channel > b_thresh[0]) & (b_channel <= b_thresh[1])] = 1
 
     l_binary = np.zeros_like(l_channel)
-    l_binary[(s_channel > l_thresh[0]) & (s_channel <= l_thresh[1])] = 1
+    l_binary[(l_channel > l_thresh[0]) & (l_channel <= l_thresh[1])] = 1
 
     v_binary = np.zeros_like(v_channel)
-    v_binary[(s_channel > v_thresh[0]) & (s_channel <= v_thresh[1])] = 1
+    v_binary[(v_channel > v_thresh[0]) & (v_channel <= v_thresh[1])] = 1
 
     combined = np.zeros_like(s_channel)
     combined[((s_binary == 1) & (b_binary == 1) & (l_binary == 1) & (v_binary == 1))] = 1
@@ -403,4 +403,4 @@ def video_case():
 
     cap.release()
 
-image_case()
+video_case()
