@@ -85,6 +85,9 @@ def color_gradient_threshold(image):
     combined_binary = np.zeros_like(s_channel)
 
     combined_binary[((gradx == 1) & (grady == 1) | (c_binary == 1) | (rgb_binary == 1))] = 255
+    # combined_binary[(gradx == 1) & (grady == 1)] = 255
+    cv2.imshow('Frame',combined_binary)
+    cv2.waitKey(0)
     color_binary = combined_binary
 
     return color_binary, combined_binary
@@ -377,8 +380,8 @@ def process_image(image):
 def image_case():
     frame = cv2.imread("test_images/test1.jpg")
     ret_frame = process_image(frame)
-    cv2.imshow('Frame',ret_frame)
-    cv2.waitKey(0)
+    # cv2.imshow('Frame',ret_frame)
+    # cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 def video_case():
@@ -403,4 +406,4 @@ def video_case():
 
     cap.release()
 
-video_case()
+image_case()
